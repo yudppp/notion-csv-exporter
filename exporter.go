@@ -27,7 +27,31 @@ func NewExporterWithClient(client *notionapi.Client) Exporter {
 	}
 }
 
-func (e *Exporter) ExportDatabase(ctx context.Context, databaseID string, writter io.Writer) error {
+type Options struct {
+	SortKey string
+	Order   string
+}
+
+func (o Options) buildRequestParameter(cursor notionapi.Cursor) *notionapi.DatabaseQueryRequest {
+	var sorts []notionapi.SortObject
+	if o.SortKey != "" {
+		sorts = append(sorts, notionapi.SortObject{
+			Property:  o.SortKey,
+			Direction: notionapi.SortOrder(o.Order),
+		})
+	} else {
+		sorts = append(sorts, notionapi.SortObject{
+			Timestamp: "created_time",
+			Direction: notionapi.SortOrder(o.Order),
+		})
+	}
+	return &notionapi.DatabaseQueryRequest{
+		StartCursor: cursor,
+		Sorts:       sorts,
+	}
+}
+
+func (e *Exporter) ExportDatabase(ctx context.Context, databaseID string, options Options, writter io.Writer) error {
 
 	w := csv.NewWriter(writter)
 	database, err := e.client.Get(ctx, notionapi.DatabaseID(databaseID))
@@ -47,9 +71,7 @@ func (e *Exporter) ExportDatabase(ctx context.Context, databaseID string, writte
 	var cursor notionapi.Cursor
 
 	for {
-		res, err := e.client.Query(ctx, notionapi.DatabaseID(databaseID), &notionapi.DatabaseQueryRequest{
-			StartCursor: cursor,
-		})
+		res, err := e.client.Query(ctx, notionapi.DatabaseID(databaseID), options.buildRequestParameter(cursor))
 		if err != nil {
 			return err
 		}
