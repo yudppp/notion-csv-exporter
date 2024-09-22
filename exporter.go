@@ -51,7 +51,6 @@ func (e *Exporter) ExportDatabase(ctx context.Context, databaseID string, writte
 			StartCursor: cursor,
 		})
 		if err != nil {
-			fmt.Println("Failed to query database:", err)
 			return err
 		}
 		for _, row := range res.Results {
@@ -59,12 +58,10 @@ func (e *Exporter) ExportDatabase(ctx context.Context, databaseID string, writte
 			for i, key := range header {
 				v, ok := row.Properties[key]
 				if !ok {
-					fmt.Println("Failed to get value:", err)
 					return err
 				}
 				value, err := GetStringValueByProperty(v)
 				if err != nil {
-					fmt.Println("Failed to get value:", err)
 					return err
 				}
 				values[i] = value
@@ -83,17 +80,17 @@ func GetStringValueByProperty(property notionapi.Property) (string, error) {
 	switch property.GetType() {
 	case notionapi.PropertyTypeTitle:
 		titleProperty := property.(*notionapi.TitleProperty)
-		return strings.Join(Pluck(titleProperty.Title, func(v notionapi.RichText) string {
+		return strings.Join(ExtractValues(titleProperty.Title, func(v notionapi.RichText) string {
 			return v.PlainText
 		}), ""), nil
 	case notionapi.PropertyTypeRichText:
 		richTextProperty := property.(*notionapi.RichTextProperty)
-		return strings.Join(Pluck(richTextProperty.RichText, func(v notionapi.RichText) string {
+		return strings.Join(ExtractValues(richTextProperty.RichText, func(v notionapi.RichText) string {
 			return v.PlainText
 		}), ""), nil
 	case notionapi.PropertyTypeText:
 		textProperty := property.(*notionapi.TextProperty)
-		return strings.Join(Pluck(textProperty.Text, func(v notionapi.RichText) string {
+		return strings.Join(ExtractValues(textProperty.Text, func(v notionapi.RichText) string {
 			return v.PlainText
 		}), ""), nil
 	case notionapi.PropertyTypeNumber:
@@ -104,7 +101,7 @@ func GetStringValueByProperty(property notionapi.Property) (string, error) {
 		return selectProperty.Select.Name, nil
 	case notionapi.PropertyTypeMultiSelect:
 		multiSelectProperty := property.(*notionapi.MultiSelectProperty)
-		return strings.Join(Pluck(multiSelectProperty.MultiSelect, func(v notionapi.Option) string {
+		return strings.Join(ExtractValues(multiSelectProperty.MultiSelect, func(v notionapi.Option) string {
 			return v.Name
 		}), ", "), nil
 	case notionapi.PropertyTypeDate:
@@ -135,7 +132,7 @@ func GetStringValueByProperty(property notionapi.Property) (string, error) {
 		}
 	case notionapi.PropertyTypeRelation:
 		relationProperty := property.(*notionapi.RelationProperty)
-		return strings.Join(Pluck(relationProperty.Relation, func(v notionapi.Relation) string {
+		return strings.Join(ExtractValues(relationProperty.Relation, func(v notionapi.Relation) string {
 			return v.ID.String()
 		}), ", "), nil
 	case notionapi.PropertyTypeRollup:
@@ -153,12 +150,12 @@ func GetStringValueByProperty(property notionapi.Property) (string, error) {
 		}
 	case notionapi.PropertyTypePeople:
 		peopleProperty := property.(*notionapi.PeopleProperty)
-		return strings.Join(Pluck(peopleProperty.People, func(v notionapi.User) string {
+		return strings.Join(ExtractValues(peopleProperty.People, func(v notionapi.User) string {
 			return v.Name
 		}), ", "), nil
 	case notionapi.PropertyTypeFiles:
 		filesProperty := property.(*notionapi.FilesProperty)
-		return strings.Join(Pluck(filesProperty.Files, func(v notionapi.File) string {
+		return strings.Join(ExtractValues(filesProperty.Files, func(v notionapi.File) string {
 			return v.Name
 		}), ", "), nil
 	case notionapi.PropertyTypeCheckbox:
@@ -213,10 +210,10 @@ func EnableDownloadPropertyConfig(propertyConfig notionapi.PropertyConfig) bool 
 	}
 }
 
-func Pluck[T any](elms []T, pluck func(val T) string) []string {
+func ExtractValues[T any](elms []T, extractFunc func(val T) string) []string {
 	results := make([]string, len(elms))
 	for i, v := range elms {
-		results[i] = pluck(v)
+		results[i] = extractFunc(v)
 	}
 	return results
 }

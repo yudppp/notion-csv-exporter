@@ -23,7 +23,7 @@ You can install `notion-csv-exporter` using `go install`:
 go install github.com/yudppp/notion-csv-exporter/cmd/notion-csv-exporter@latest
 ```
 
-This will download and build the tool, and place the binary in your `$GOBIN` directory (by default `$HOME/go/bin`).
+This will download and build the tool, placing the binary in your `$GOBIN` directory (by default `$HOME/go/bin`).
 
 If you want to install a specific version, you can use a tagged version like this:
 
@@ -38,18 +38,20 @@ Make sure your `$GOBIN` is added to your system's `$PATH`, so you can run the to
 Once installed, you can use the tool from anywhere in your terminal:
 
 ```bash
-notion-csv-exporter -token {NOTION_API_TOKEN} -databaseID={NOTION_DATABASE_ID}
+notion-csv-exporter -token={NOTION_API_TOKEN} -databaseID={NOTION_DATABASE_ID}
 ```
 
 Replace `{NOTION_API_TOKEN}` with your Notion API token and `{NOTION_DATABASE_ID}` with your database ID.
 
 ### Example
 
+Here’s an example command to export data:
+
 ```bash
-notion-csv-exporter -token secret_abc12345 -databaseID 6789abcdef0123456789abcdef
+notion-csv-exporter -token=secret_abc12345 -databaseID=1234567890abcdef1234567890abcdef
 ```
 
-This will export the contents of the specified Notion database to a CSV file, which will be saved in the current directory.
+This command will export the contents of the specified Notion database to a CSV file named `output.csv` in the current directory.
 
 ## How to Get Notion API Token and Database ID
 

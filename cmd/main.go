@@ -1,10 +1,9 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"flag"
-	"fmt"
+	"log"
 	"os"
 
 	exporter "github.com/yudppp/notion-csv-exporter"
@@ -17,16 +16,13 @@ func main() {
 	flag.Parse()
 
 	if *token == "" || *databaseID == "" {
-		fmt.Println("Error: Both token and databaseID are required.")
+		log.Println("Error: Both token and databaseID are required.")
 		flag.Usage()
 		os.Exit(1)
 	}
-
 	client := exporter.NewExporter(*token)
-	w := &bytes.Buffer{}
-	err := client.ExportDatabase(context.Background(), *databaseID, w)
+	err := client.ExportDatabase(context.Background(), *databaseID, os.Stdout)
 	if err != nil {
-		os.Exit(1)
+		log.Fatalf("Failed to export database: %v", err)
 	}
-	fmt.Println(w.String())
 }
